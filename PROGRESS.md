@@ -16,6 +16,8 @@ repo: https://github.com/teacherarm-dotcom/zoomjor (public)
 
 - **2026-09-06 (5)** — `git init` + push ขึ้น GitHub เป็น **public repo `teacherarm-dotcom/zoomjor`** (คอมมิตแรก `2c2c6cd` 17 ไฟล์) · `.gitignore` ตัด `ZoomJor.app/` (build artifact) และ `.DS_Store` · เก็บ `Resources/AppIcon.icns` + `zoomjor icon.png` ไว้ใน repo เพื่อให้ `./build.sh` ใช้ได้ทันทีหลัง clone · ใส่ topics ให้ค้นเจอ
 
+- **2026-09-06 (6)** — เพิ่ม `LICENSE` แบบ **MIT** (© 2026 Thanasarn Rujira ตาม `git config user.name`) + หัวข้อสัญญาอนุญาตใน README · GitHub จะขึ้นป้าย MIT ให้เอง
+
 ## ⚠️ ข้อควรรู้
 
 - เปลี่ยน bundle id เมื่อไหร่ **สิทธิ์ Screen Recording ต้องอนุญาตใหม่** (TCC ผูกกับ bundle id + ลายเซ็น)
