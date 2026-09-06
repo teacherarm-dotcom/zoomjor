@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.controller.showPermissionAlert(error)
         }
 
+        ZLog.log("=== ZoomJor เริ่มทำงาน ===")
         HotKeyCenter.shared.start()
         let ids = [
             HotKeyCenter.shared.register(keyCode: kVK_ANSI_1, modifiers: controlKey) { [weak self] in

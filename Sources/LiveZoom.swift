@@ -1,8 +1,8 @@
 import AppKit
 import Carbon.HIToolbox
+import CoreImage
 import CoreMedia
 import ScreenCaptureKit
-import VideoToolbox
 
 // MARK: - ตัวรับเฟรมสด
 
@@ -10,7 +10,12 @@ import VideoToolbox
 final class LiveFrameSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
     private var stream: SCStream?
-    private let queue = DispatchQueue(label: "net.kruarm.zoomit.live", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "net.kruarm.zoomjor.live", qos: .userInteractive)
+    /// CIContext เรนเดอร์ลง buffer ใหม่ = คัดลอกพิกเซลจริง
+    /// (ห้ามห่อ CVPixelBuffer ตรง ๆ เพราะ SCStream หมุนใช้ buffer ซ้ำ ภาพจะเพี้ยน/ดำ)
+    private let ciContext = CIContext(options: [.cacheIntermediates: false])
+    private var frameCount = 0
+    private var skipCount = 0
     private let onFrame: (CGImage) -> Void
     private let onStop: (Error?) -> Void
 
@@ -26,11 +31,18 @@ final class LiveFrameSource: NSObject, SCStreamOutput, SCStreamDelegate {
         guard let display else { throw CaptureError.noDisplay }
 
         let myPID = ProcessInfo.processInfo.processIdentifier
+        let myWindows = content.windows.filter { $0.owningApplication?.processID == myPID }
+        ZLog.log("live: content displays=\(content.displays.count) apps=\(content.applications.count) windows=\(content.windows.count) myWindows=\(myWindows.count)")
+
         let filter: SCContentFilter
         if let me = content.applications.first(where: { $0.processID == myPID }) {
             filter = SCContentFilter(display: display, excludingApplications: [me], exceptingWindows: [])
+            ZLog.log("live: filter = excludingApplications(self)")
         } else {
-            filter = SCContentFilter(display: display, excludingWindows: [])
+            // ไม่พบตัวเองในรายการแอป → ตัดออกทีละหน้าต่างแทน
+            // ห้าม fallback เป็น excludingWindows([]) เด็ดขาด เพราะจะจับหน้าต่างดำของตัวเองมาแสดงวน = จอดำ
+            filter = SCContentFilter(display: display, excludingWindows: myWindows)
+            ZLog.log("live: self NOT in applications list -> filter = excludingWindows(\(myWindows.count))")
         }
 
         let config = SCStreamConfiguration()
@@ -46,6 +58,7 @@ final class LiveFrameSource: NSObject, SCStreamOutput, SCStreamDelegate {
         try s.addStreamOutput(self, type: .screen, sampleHandlerQueue: queue)
         try await s.startCapture()
         stream = s
+        ZLog.log("live: stream started \(config.width)x\(config.height) @\(fps)fps")
     }
 
     func stop() async {
@@ -59,22 +72,36 @@ final class LiveFrameSource: NSObject, SCStreamOutput, SCStreamDelegate {
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
                 of type: SCStreamOutputType) {
         guard type == .screen else { return }
-        guard let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer,
-                                                                        createIfNecessary: false)
-                as? [[SCStreamFrameInfo: Any]],
-              let raw = attachments.first?[.status] as? Int,
-              let status = SCFrameStatus(rawValue: raw),
-              status == .complete,
-              let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
-        else { return }
 
-        var image: CGImage?
-        VTCreateCGImageFromCVPixelBuffer(pixelBuffer, options: nil, imageOut: &image)
-        guard let image else { return }
+        let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer,
+                                                                  createIfNecessary: false)
+            as? [[SCStreamFrameInfo: Any]]
+        if let raw = attachments?.first?[.status] as? Int,
+           let status = SCFrameStatus(rawValue: raw),
+           status != .complete {
+            skipCount += 1
+            if skipCount <= 3 { ZLog.log("live: skip frame status=\(status.rawValue)") }
+            return
+        }
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            skipCount += 1
+            if skipCount <= 3 { ZLog.log("live: skip frame — ไม่มี imageBuffer") }
+            return
+        }
+
+        let ci = CIImage(cvPixelBuffer: pixelBuffer)
+        guard let image = ciContext.createCGImage(ci, from: ci.extent) else {
+            skipCount += 1
+            if skipCount <= 3 { ZLog.log("live: createCGImage ล้มเหลว") }
+            return
+        }
+        frameCount += 1
+        if frameCount == 1 { ZLog.log("live: เฟรมแรก \(image.width)x\(image.height)") }
         DispatchQueue.main.async { self.onFrame(image) }
     }
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
+        ZLog.log("live: stream หยุดเอง — \(error.localizedDescription)")
         DispatchQueue.main.async { self.onStop(error) }
     }
 }
@@ -83,6 +110,7 @@ final class LiveFrameSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
 final class LiveZoomView: NSView {
     var image: NSImage?
+    var statusText: String?
     var zoom: CGFloat = 2
     var cursor: CGPoint = .zero        // ตำแหน่งเมาส์ในพิกัด canvas (point, origin ล่างซ้าย)
     var canvasSize: CGSize = .zero
@@ -93,7 +121,7 @@ final class LiveZoomView: NSView {
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
         ctx.setFillColor(NSColor.black.cgColor)
         ctx.fill(bounds)
-        guard let image, canvasSize.width > 0 else { return }
+        guard let image, canvasSize.width > 0 else { drawStatus(); return }
 
         // ยึดจุดใต้เคอร์เซอร์ไว้กับที่ เพื่อให้เคอร์เซอร์จริงตรงกับเนื้อหาที่ขยายเสมอ
         // (คลิกตรงไหน = โดนตรงนั้นจริง)
@@ -104,6 +132,26 @@ final class LiveZoomView: NSView {
                          height: canvasSize.height / zoom)
         ctx.interpolationQuality = .high
         image.draw(in: bounds, from: src, operation: .copy, fraction: 1.0)
+    }
+
+    /// แสดงว่ากำลังทำอะไรอยู่ระหว่างที่ยังไม่มีภาพ — จอดำเปล่า ๆ ทำให้ผู้ใช้ไม่รู้ว่าค้างหรือพัง
+    private func drawStatus() {
+        let text = statusText ?? "กำลังเริ่มภาพสด…"
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        style.lineSpacing = 6
+        let attr = NSAttributedString(string: text, attributes: [
+            .font: NSFont.systemFont(ofSize: 20, weight: .medium),
+            .foregroundColor: NSColor.white.withAlphaComponent(0.9),
+            .paragraphStyle: style
+        ])
+        let maxWidth = min(bounds.width - 120, 720)
+        let rect = attr.boundingRect(with: NSSize(width: maxWidth, height: .greatestFiniteMagnitude),
+                                     options: [.usesLineFragmentOrigin])
+        attr.draw(with: NSRect(x: (bounds.width - maxWidth) / 2,
+                               y: (bounds.height - rect.height) / 2,
+                               width: maxWidth, height: rect.height),
+                  options: [.usesLineFragmentOrigin])
     }
 }
 
@@ -138,6 +186,7 @@ final class LiveZoomController {
     private var pumpTimer: Timer?
     private var screenFrame: CGRect = .zero
     private var lastMouse: CGPoint = .init(x: -1, y: -1)
+    private var frameSeen = false
 
     private(set) var isActive = false
     var onFailure: ((Error) -> Void)?
@@ -159,6 +208,8 @@ final class LiveZoomController {
             ?? NSScreen.main ?? NSScreen.screens[0]
         screenFrame = screen.frame
         isActive = true
+        frameSeen = false
+        ZLog.log("live: start จอ \(Int(screen.frame.width))x\(Int(screen.frame.height)) scale=\(screen.backingScaleFactor)")
 
         makeWindow(on: screen)
         makePanel(on: screen)
@@ -186,11 +237,26 @@ final class LiveZoomController {
             MainActor.assumeIsolated { self?.pump() }
         }
         pump()
+
+        // ถ้าเกิน 2 วินาทีแล้วยังไม่มีภาพเข้ามา = บอกผู้ใช้ว่าติดอะไร แทนที่จะปล่อยให้เห็นจอดำเฉย ๆ
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self, self.isActive, !self.frameSeen else { return }
+            ZLog.log("live: ⚠️ ครบ 2 วินาทีแล้วยังไม่ได้เฟรมแรก")
+            self.view?.statusText = """
+                ยังไม่ได้รับภาพหน้าจอ
+                เปิดสิทธิ์ “การบันทึกหน้าจอ” ให้ ZoomJor แล้วเปิดแอปใหม่
+                (การตั้งค่าระบบ → ความเป็นส่วนตัวและความปลอดภัย)
+
+                กด ⌃4 อีกครั้งเพื่อออก
+                """
+            self.view?.needsDisplay = true
+        }
     }
 
     func stop() {
         guard isActive else { return }
         isActive = false
+        ZLog.log("live: stop")
         pumpTimer?.invalidate(); pumpTimer = nil
         HotKeyCenter.shared.unregister(hotkeys); hotkeys.removeAll()
 
@@ -207,6 +273,11 @@ final class LiveZoomController {
 
     private func receive(_ image: CGImage) {
         guard isActive, let view else { return }
+        if !frameSeen {
+            frameSeen = true
+            view.statusText = nil
+            ZLog.log("live: ได้ภาพแล้ว เริ่มแสดงผล")
+        }
         view.image = NSImage(cgImage: image, size: screenFrame.size)
         view.needsDisplay = true
     }
@@ -233,6 +304,10 @@ final class LiveZoomController {
         w.hasShadow = false
         w.ignoresMouseEvents = true        // คลิกทะลุลงไปยังแอปข้างล่างได้ตามปกติ
         w.isReleasedWhenClosed = false
+        // 🔒 กันภาพซ้อนวน: หน้าต่างนี้ทึบดำและคลุมทั้งจอ ถ้ามันเข้าไปอยู่ในภาพที่เราจับมาเอง
+        // จะได้จอดำสนิทตลอดไป — sharingType = .none บังคับให้ระบบไม่จับหน้าต่างนี้เลย
+        // (ไม่ใช้กับโหมดวาด/ซูมแช่จอ เพราะลายเส้นต้องขึ้นให้คนดูปลายทางเห็นตอนแชร์หน้าจอ)
+        w.sharingType = .none
 
         let v = LiveZoomView(frame: CGRect(origin: .zero, size: screen.frame.size))
         v.canvasSize = screen.frame.size
@@ -263,6 +338,7 @@ final class LiveZoomController {
         p.isOpaque = false
         p.backgroundColor = .clear
         p.hasShadow = true
+        p.sharingType = .none
 
         let backdrop = HUDBackdropView(frame: CGRect(origin: .zero,
                                                      size: CGSize(width: width, height: height)))
