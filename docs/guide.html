@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คีย์ลัด ZoomJor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --display: "Bai Jamjuree", "Helvetica Neue", sans-serif;
+    --body: "IBM Plex Sans Thai", "Helvetica Neue", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+    --bg: #f1f2f6;
+    --surface: #ffffff;
+    --ink: #15171e;
+    --muted: #5c6272;
+    --faint: #878da0;
+    --line: #dcdfe7;
+    --line-soft: #e8eaf0;
+    --accent: #1560e0;
+    --accent-soft: #e7effd;
+
+    --cap: #ffffff;
+    --cap-ink: #23262f;
+    --cap-line: #c6cad6;
+    --cap-shadow: #b9bece;
+
+    --measure: 66ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d0f14;
+      --surface: #161922;
+      --ink: #e8eaf0;
+      --muted: #969dad;
+      --faint: #767d8e;
+      --line: #262a35;
+      --line-soft: #1f232c;
+      --accent: #6ba5ff;
+      --accent-soft: #16263f;
+
+      --cap: #232733;
+      --cap-ink: #e3e6ee;
+      --cap-line: #3a3f4e;
+      --cap-shadow: #10131a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --ink: #e8eaf0;
+    --muted: #969dad;
+    --faint: #767d8e;
+    --line: #262a35;
+    --line-soft: #1f232c;
+    --accent: #6ba5ff;
+    --accent-soft: #16263f;
+
+    --cap: #232733;
+    --cap-ink: #e3e6ee;
+    --cap-line: #3a3f4e;
+    --cap-shadow: #10131a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 72px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { padding-bottom: 26px; border-bottom: 2px solid var(--ink); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 6vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h1 .thai-name { color: var(--muted); font-weight: 500; }
+
+  .lead {
+    max-width: var(--measure);
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 1.02rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--faint);
+  }
+
+  .meta b { color: var(--ink); font-weight: 600; }
+  .meta a { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+  .meta a:hover { opacity: .75; }
+
+  /* ---------- section headings ---------- */
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.35rem;
+    letter-spacing: -.01em;
+    margin: 52px 0 4px;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: .93rem;
+    max-width: var(--measure);
+  }
+
+  /* ---------- keycaps ---------- */
+
+  .k {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2em;
+    padding: .34em .48em;
+    font-family: var(--mono);
+    font-size: .8em;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    color: var(--cap-ink);
+    background: var(--cap);
+    border: 1px solid var(--cap-line);
+    border-radius: 6px;
+    box-shadow: 0 1.5px 0 var(--cap-shadow);
+  }
+
+  .or { color: var(--faint); font-size: .8em; padding: 0 .15em; }
+
+  /* ---------- mode spine ---------- */
+
+  .modes { border-top: 1px solid var(--line); }
+
+  .mode {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 26px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+    break-inside: avoid;
+  }
+
+  .mode-cap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 3px;
+  }
+
+  .mode-cap .k {
+    font-size: 1.15rem;
+    min-width: 3.5em;
+    padding: .42em .5em;
+  }
+
+  .mode-cap .n {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .mode h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.18rem;
+    margin: 0;
+    letter-spacing: -.005em;
+  }
+
+  .mode h3 span { color: var(--faint); font-weight: 500; font-size: .82em; }
+
+  .mode p {
+    margin: 5px 0 16px;
+    color: var(--muted);
+    font-size: .95rem;
+    max-width: var(--measure);
+  }
+
+  /* ---------- key list ---------- */
+
+  dl.keys {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 9px 18px;
+    margin: 0;
+    align-items: baseline;
+  }
+
+  dl.keys dt { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  dl.keys dd { margin: 0; font-size: .95rem; color: var(--ink); }
+  dl.keys dd em { font-style: normal; color: var(--faint); }
+
+  /* ---------- reference blocks ---------- */
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px 44px;
+    align-items: start;
+  }
+
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    gap: 10px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .swatches li {
+    display: grid;
+    grid-template-columns: 18px max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 8px;
+  }
+
+  .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px rgba(128, 132, 145, .45);
+  }
+
+  .swatches .name { font-size: .93rem; font-weight: 500; }
+
+  .swatches .hex {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+    text-align: right;
+  }
+
+  /* ---------- notes ---------- */
+
+  .notes {
+    margin: 0;
+    padding: 22px 26px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .notes ul { margin: 0; padding-left: 1.1em; }
+  .notes li { margin: 0 0 9px; font-size: .95rem; }
+  .notes li:last-child { margin-bottom: 0; }
+  .notes strong { font-weight: 600; }
+
+  .callout {
+    margin: 0 0 26px;
+    padding: 16px 20px;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    font-size: .95rem;
+  }
+
+  .callout strong { font-weight: 600; }
+
+  ol.steps {
+    counter-reset: s;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+  }
+
+  ol.steps li {
+    counter-increment: s;
+    padding-top: 12px;
+    border-top: 2px solid var(--ink);
+    font-size: .95rem;
+  }
+
+  ol.steps li::before {
+    content: counter(s);
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--faint);
+    margin-bottom: 6px;
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: .87rem;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    justify-content: space-between;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  a:focus-visible, li:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  @media (max-width: 560px) {
+    .mode { grid-template-columns: 1fr; gap: 14px; }
+    .mode-cap { flex-direction: row; align-items: baseline; justify-content: flex-start; }
+    dl.keys { grid-template-columns: 1fr; gap: 4px 0; }
+    dl.keys dd { margin-bottom: 8px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; font-size: 11pt; }
+    .sheet { padding: 0; max-width: none; }
+    .notes, .callout, .swatches li { background: #fff; }
+    h2 { margin-top: 26px; }
+    footer { margin-top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <p class="eyebrow">แอปแถบเมนู macOS · คู่มือใช้งาน</p>
+    <h1>ZoomJor <span class="thai-name">ซูมจอ</span></h1>
+    <p class="lead">
+      ซูมหน้าจอ วาดลูกศรทับจอ และตั้งนาฬิกาพัก ระหว่างสอนหรือนำเสนอ —
+      กดคีย์ลัดได้จากทุกแอป ไม่ต้องสลับหน้าต่าง
+    </p>
+    <div class="meta">
+      <span>ติดตั้งแล้วที่ <b>/Applications/ZoomJor.app</b></span>
+      <span>ไอคอน <b>🔍 บนแถบเมนูขวาบน</b></span>
+      <span><a href="https://github.com/teacherarm-dotcom/zoomjor">github.com/teacherarm-dotcom/zoomjor</a></span>
+    </div>
+  </header>
+
+  <h2>เริ่มใช้</h2>
+  <ol class="steps">
+    <li>เปิดแอป — ไอคอนแว่นขยายจะไปอยู่บนแถบเมนูขวาบน ไม่มีหน้าต่างโปรแกรม</li>
+    <li>กด <span class="k">⌃</span> <span class="k">2</span> ลองวาดทับหน้าจอดูก่อน โหมดนี้ใช้ได้ทันที</li>
+    <li>กด <span class="k">⌃</span> <span class="k">1</span> เพื่อซูม — ครั้งแรก macOS จะขอสิทธิ์บันทึกหน้าจอ (ดูหมายเหตุท้ายหน้า)</li>
+  </ol>
+
+  <h2>สี่โหมดหลัก</h2>
+  <p class="sub">กดคีย์เดิมซ้ำอีกครั้งเพื่อออกจากโหมด</p>
+
+  <div class="modes">
+
+    <section class="mode">
+      <div class="mode-cap">
+        <span class="k">⌃1</span>
+        <span class="n">Zoom</span>
+      </div>
+      <div>
+        <h3>ซูมแช่หน้าจอ <span>— แช่ภาพไว้แล้วขยาย พร้อมวาดทับ</span></h3>
+        <p>จับภาพหน้าจอที่ความละเอียด Retina เต็ม แล้วแช่ไว้ ซูมได้ 1–16 เท่าโดยยังคมชัด เหมาะกับตอนชี้โค้ดหรือตัวหนังสือเล็ก ๆ</p>
+        <dl class="keys">
+          <dt>เลื่อนเมาส์</dt>
+          <dd>ส่องภาพตามตำแหน่งเมาส์</dd>
+
+          <dt><span class="k">สกอร์ล</span><span class="or">/</span><span class="k">=</span><span class="k">-</span><span class="or">/</span><span class="k">↑</span><span class="k">↓</span></dt>
+          <dd>ขยาย–ย่อ <em>(1× ถึง 16×)</em></dd>
+
+          <dt><span class="k">0</span></dt>
+          <dd>กลับไป 100%</dd>
+
+          <dt><span class="k">←</span><span class="k">→</span></dt>
+          <dd>เลื่อนภาพซ้าย–ขวา</dd>
+
+          <dt>คลิกลาก</dt>
+          <dd>เริ่มวาด — ภาพจะล็อกให้อัตโนมัติ</dd>
+
+          <dt><span class="k">⇥</span></dt>
+          <dd>สลับล็อก / ปลดล็อกการส่องตามเมาส์</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="mode">
+      <div class="mode-cap">
+        <span class="k">⌃2</span>
+        <span class="n">Draw</span>
+      </div>
+      <div>
+        <h3>วาดทับหน้าจอสด <span>— ไม่แช่ภาพ หน้าจอยังขยับอยู่</span></h3>
+        <p>เขียนทับได้เลยบนภาพจอที่กำลังเคลื่อนไหว เช่น วงกลมปุ่มระหว่างเล่นวิดีโอ โหมดนี้ไม่ต้องขอสิทธิ์บันทึกหน้าจอ</p>
+        <dl class="keys">
+          <dt>คลิกลาก</dt>
+          <dd>วาดด้วยเครื่องมือที่เลือกอยู่</dd>
+
+          <dt><span class="k">สกอร์ล</span></dt>
+          <dd>ปรับขนาดเส้น</dd>
+
+          <dt><span class="k">Z</span></dt>
+          <dd>แช่หน้าจอแล้วซูมต่อ <em>โดยเก็บลายเส้นที่วาดไว้</em></dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="mode">
+      <div class="mode-cap">
+        <span class="k">⌃3</span>
+        <span class="n">Timer</span>
+      </div>
+      <div>
+        <h3>นาฬิกาจับเวลาถอยหลัง <span>— สำหรับพักเบรก</span></h3>
+        <p>ขึ้นเต็มจอบนพื้นหลังภาพจอที่เบลอและหรี่ลง วงแหวนเดินถอยหลังพร้อมบอกเวลาที่จะกลับมาต่อ เริ่มต้น 10 นาที เปลี่ยนค่าเริ่มต้นได้ที่เมนู <b>เวลาพักเริ่มต้น</b> บนแถบเมนู</p>
+        <dl class="keys">
+          <dt><span class="k">Space</span></dt>
+          <dd>หยุดชั่วคราว / เดินต่อ</dd>
+
+          <dt><span class="k">↑</span><span class="k">↓</span></dt>
+          <dd>เพิ่ม–ลด ครั้งละ 1 นาที</dd>
+
+          <dt><span class="k">←</span><span class="k">→</span></dt>
+          <dd>เพิ่ม–ลด ครั้งละ 10 วินาที</dd>
+
+          <dt>ตัวเลข <span class="k">↵</span></dt>
+          <dd>พิมพ์จำนวนนาทีแล้วกด Enter เพื่อตั้งเวลาใหม่</dd>
+
+          <dt><span class="k">⌘</span><span class="k">R</span></dt>
+          <dd>เริ่มนับใหม่จากต้น</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="mode">
+      <div class="mode-cap">
+        <span class="k">⌃4</span>
+        <span class="n">Live</span>
+      </div>
+      <div>
+        <h3>ซูมสด <span>— ขยายภาพสดแบบคลิกทะลุ</span></h3>
+        <p>ขยายหน้าจอแบบเรียลไทม์ 60 เฟรม/วินาที และ<b>ยังคลิกกับพิมพ์กับแอปข้างล่างได้ตามปกติ</b> เพราะยึดจุดใต้เคอร์เซอร์ไว้กับที่ — ชี้ตรงไหน โดนตรงนั้นจริง เหมาะกับตอนสาธิตการใช้งานโปรแกรม</p>
+        <dl class="keys">
+          <dt><span class="k">⌃</span><span class="k">⌥</span><span class="k">↑</span><span class="or">/</span><span class="k">⌃</span><span class="k">⌥</span><span class="k">=</span></dt>
+          <dd>ขยาย</dd>
+
+          <dt><span class="k">⌃</span><span class="k">⌥</span><span class="k">↓</span><span class="or">/</span><span class="k">⌃</span><span class="k">⌥</span><span class="k">-</span></dt>
+          <dd>ย่อ</dd>
+
+          <dt><span class="k">⌃</span><span class="k">⌥</span><span class="k">0</span></dt>
+          <dd>กลับไป 200%</dd>
+
+          <dt>แถบลอยกลางจอ</dt>
+          <dd>ปุ่ม − % + และ ✕ กดได้โดยไม่แย่งโฟกัสจากแอปที่ใช้อยู่</dd>
+
+          <dt>ออกจากโหมด</dt>
+          <dd>กด <span class="k">⌃</span><span class="k">4</span> ซ้ำ หรือปุ่ม ✕ บนแถบลอย <em>— โหมดนี้ Esc ไม่ทำงาน เพราะคีย์บอร์ดถูกส่งต่อให้แอปข้างล่าง</em></dd>
+        </dl>
+      </div>
+    </section>
+
+  </div>
+
+  <h2>สีเส้น</h2>
+  <p class="sub">กดตัวอักษรได้ทันทีขณะอยู่ในโหมดวาดหรือโหมดซูม หรือคลิกจากแถบเครื่องมือบนจอก็ได้</p>
+  <ul class="swatches">
+    <li><span class="dot" style="--c:#ED2129"></span><span class="name"><span class="k">R</span> แดง</span><span class="hex">#ED2129</span></li>
+    <li><span class="dot" style="--c:#1AC74F"></span><span class="name"><span class="k">G</span> เขียว</span><span class="hex">#1AC74F</span></li>
+    <li><span class="dot" style="--c:#FFD40D"></span><span class="name"><span class="k">Y</span> เหลือง</span><span class="hex">#FFD40D</span></li>
+    <li><span class="dot" style="--c:#0A0A0F"></span><span class="name"><span class="k">K</span> ดำ</span><span class="hex">#0A0A0F</span></li>
+    <li><span class="dot" style="--c:#176BF5"></span><span class="name"><span class="k">B</span> น้ำเงิน</span><span class="hex">#176BF5</span></li>
+    <li><span class="dot" style="--c:#FFFFFF"></span><span class="name"><span class="k">W</span> ขาว</span><span class="hex">#FFFFFF</span></li>
+    <li><span class="dot" style="--c:#FF8500"></span><span class="name"><span class="k">O</span> ส้ม</span><span class="hex">#FF8500</span></li>
+    <li><span class="dot" style="--c:#F53DA8"></span><span class="name"><span class="k">M</span> ชมพู</span><span class="hex">#F53DA8</span></li>
+  </ul>
+
+  <div class="grid-2" style="margin-top:44px">
+    <div>
+      <h2 style="margin-top:0">เครื่องมือวาด</h2>
+      <p class="sub">กด <span class="k">⇧</span> ค้างขณะลาก = บังคับมุม 45° สำหรับเส้นและลูกศร หรือบังคับเป็นจัตุรัส/วงกลม</p>
+      <dl class="keys">
+        <dt><span class="k">A</span></dt><dd>ลูกศร <em>(ค่าเริ่มต้น)</em></dd>
+        <dt><span class="k">P</span></dt><dd>ปากกาวาดอิสระ</dd>
+        <dt><span class="k">L</span></dt><dd>เส้นตรง</dd>
+        <dt><span class="k">S</span></dt><dd>สี่เหลี่ยม</dd>
+        <dt><span class="k">C</span></dt><dd>วงรี</dd>
+        <dt><span class="k">H</span></dt><dd>ปากกาไฮไลต์ <em>(โปร่งแสง)</em></dd>
+        <dt><span class="k">T</span></dt><dd>ข้อความ — คลิกแล้วพิมพ์ได้เลย พิมพ์ไทยได้ กด <span class="k">↵</span> จบ</dd>
+      </dl>
+    </div>
+
+    <div>
+      <h2 style="margin-top:0">แก้ไข บันทึก และอื่น ๆ</h2>
+      <p class="sub">ใช้ได้ทุกโหมดที่วาดได้</p>
+      <dl class="keys">
+        <dt><span class="k">⌫</span><span class="or">/</span><span class="k">⌘Z</span><span class="or">/</span><span class="k">U</span></dt><dd>ย้อนกลับ</dd>
+        <dt><span class="k">⇧</span><span class="k">⌘Z</span></dt><dd>ทำซ้ำ</dd>
+        <dt><span class="k">E</span><span class="or">/</span><span class="k">⌘⌫</span></dt><dd>ลบภาพวาดทั้งหมด</dd>
+        <dt><span class="k">[</span><span class="k">]</span></dt><dd>ลด–เพิ่มขนาดเส้น</dd>
+        <dt><span class="k">⌘S</span></dt><dd>บันทึกเป็นไฟล์ PNG ลง Desktop</dd>
+        <dt><span class="k">⌘C</span></dt><dd>คัดลอกภาพลงคลิปบอร์ด</dd>
+        <dt><span class="k">/</span><span class="or">/</span><span class="k">F1</span></dt><dd>แสดง–ซ่อนคีย์ลัดบนจอ</dd>
+        <dt><span class="k">D</span></dt><dd>ซ่อน–แสดงแถบเครื่องมือบนจอ</dd>
+        <dt><span class="k">⎋</span></dt><dd>ออกจากโหมด <em>(คลิกขวาก็ได้)</em></dd>
+        <dt><span class="k">⌘Q</span></dt><dd>ปิดโปรแกรม</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h2>ข้อควรรู้</h2>
+  <div class="notes">
+    <ul>
+      <li>
+        <strong>สิทธิ์บันทึกหน้าจอ</strong> — โหมด <span class="k">⌃1</span> <span class="k">⌃3</span> <span class="k">⌃4</span> ต้องใช้สิทธิ์นี้
+        เปิดที่ <b>การตั้งค่าระบบ → ความเป็นส่วนตัวและความปลอดภัย → การบันทึกหน้าจอ</b> ติ๊กอนุญาต ZoomJor แล้วเปิดแอปใหม่
+        ส่วนโหมด <span class="k">⌃2</span> ใช้ได้เลย ไม่ต้องขอสิทธิ์
+      </li>
+      <li>
+        <strong>ไม่ต้องจำคีย์ก็ใช้ได้</strong> — ทุกโหมดที่วาดได้จะมีแถบเครื่องมือคลิกได้อยู่บนจอ ครบทั้งเครื่องมือ สี และปุ่มย้อนกลับ
+        (ในโหมดนาฬิกาแถบนี้ซ่อนไว้ กด <span class="k">D</span> เพื่อเรียกขึ้นมา)
+      </li>
+      <li>
+        <strong>ทำงานทีละจอ</strong> — ใช้จอที่เมาส์อยู่ ณ ตอนกดคีย์ลัด ถ้าจะย้ายจอให้ออกจากโหมดแล้วเลื่อนเมาส์ไปจออื่นก่อนกดใหม่
+      </li>
+      <li>
+        <strong>คีย์ลัดใช้ได้ทั้งแป้นไทยและอังกฤษ</strong> — โปรแกรมอ่านตำแหน่งปุ่มจริง ไม่ได้อ่านตัวอักษร จึงไม่ต้องสลับแป้นก่อนกด
+      </li>
+      <li>
+        <strong>ถ้า <span class="k">⌃1</span>–<span class="k">⌃4</span> ไม่ทำงาน</strong> — อาจมีแอปอื่นจองคีย์นั้นอยู่
+        สั่งงานทุกโหมดจากเมนูไอคอนแว่นขยายบนแถบเมนูได้เหมือนกัน
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    <span>ZoomJor · แอปช่วยนำเสนอและสอนบน macOS · Swift/AppKit ไม่มี dependency</span>
+    <span><a href="https://github.com/teacherarm-dotcom/zoomjor">ซอร์สโค้ดและวิธีคอมไพล์เอง →</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
