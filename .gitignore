@@ -1,0 +1,6 @@
+# ผลลัพธ์การ build (สร้างใหม่ได้ด้วย ./build.sh)
+ZoomJor.app/
+build/
+
+# macOS
+.DS_Store
