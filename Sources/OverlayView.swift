@@ -18,7 +18,7 @@ final class OverlayView: NSView {
     var panFollowsMouse = true
 
     // ---- เครื่องมือวาด ----
-    var tool: Tool = .arrow { didSet { needsDisplay = true } }
+    var tool: Tool = .pen { didSet { needsDisplay = true } }
     var color: NSColor = Palette.all[0].color { didSet { needsDisplay = true } }
     var lineWidth: CGFloat = 5 { didSet { needsDisplay = true } }
 
@@ -27,6 +27,7 @@ final class OverlayView: NSView {
     private var redoStack: [[Stroke]] = []
     private var current: Stroke?
     private var editingIndex: Int?
+    private var strokeFromModifier = false
     private var pendingTextUndo: [Stroke]?
     private var showHelp = false
     private var hudHidden = false
@@ -640,7 +641,8 @@ final class OverlayView: NSView {
     // MARK: - HUD
 
     private static let helpLines: [String] = [
-        "เครื่องมือ:  A ลูกศร   P ปากกา   L เส้นตรง   S สี่เหลี่ยม   C วงรี   H ไฮไลต์   T ข้อความ",
+        "เครื่องมือ:  P ปากกา   A ลูกศร   L เส้นตรง   S สี่เหลี่ยม   C วงรี   H ไฮไลต์   T ข้อความ",
+        "ทางลัดขณะลาก:  ⇧ ค้าง = ลูกศร   ⌃⇧ ค้าง = สี่เหลี่ยม   ⌥ ค้าง = บังคับมุม 45° / จัตุรัส",
         "สีเส้น:  R แดง   G เขียว   Y เหลือง   K ดำ   B น้ำเงิน   W ขาว   O ส้ม   M ชมพู",
         "ย้อนกลับ:  ⌫ (Backspace)  หรือ  ⌘Z  หรือ  U        ทำซ้ำ: ⇧⌘Z        ลบทั้งหมด: E หรือ ⌘⌫",
         "ขนาดเส้น:  [ เล็กลง   ] ใหญ่ขึ้น        ซูม: สกอร์ล / + - / ↑ ↓        Tab ล็อกการแพน",
@@ -762,21 +764,40 @@ final class OverlayView: NSView {
 
     // MARK: - เมาส์
 
+    /// ทางลัดชั่วคราวขณะลาก — ไม่เปลี่ยนเครื่องมือที่เลือกค้างไว้
+    /// ⇧ = ลูกศร · ⌃⇧ = สี่เหลี่ยม
+    private func modifierTool(_ flags: NSEvent.ModifierFlags) -> Tool? {
+        guard flags.contains(.shift) else { return nil }
+        return flags.contains(.control) ? .rect : .arrow
+    }
+
     override func mouseDown(with event: NSEvent) {
         let vp = viewPoint(event)
-
         if !hudHidden, let i = barButtons.firstIndex(where: { $0.rect.contains(vp) }) {
             perform(barButtons[i].action)
             return
         }
+        beginStroke(event)
+    }
 
+    override func mouseDragged(with event: NSEvent) { continueStroke(event) }
+    override func mouseUp(with event: NSEvent) { endStroke() }
+
+    // ⌃+คลิก บน macOS อาจถูกส่งมาเป็นคลิกขวา — ถ้ากด ⇧ ค้างอยู่แปลว่าตั้งใจวาดสี่เหลี่ยม ไม่ใช่จะออกจากโหมด
+    override func rightMouseDragged(with event: NSEvent) { continueStroke(event) }
+    override func rightMouseUp(with event: NSEvent) { endStroke() }
+
+    private func beginStroke(_ event: NSEvent) {
         if mode == .zoom && panFollowsMouse {
             panFollowsMouse = false
             updateCursorState()
         }
-        let p = canvasPoint(from: vp)
+        let p = canvasPoint(event)
+        let shortcut = modifierTool(event.modifierFlags)
+        let drawTool = shortcut ?? tool
+        strokeFromModifier = (shortcut != nil)
 
-        if tool == .text {
+        if drawTool == .text {
             commitText()
             pendingTextUndo = strokes
             strokes.append(Stroke(tool: .text, color: color, width: lineWidth, points: [p], text: ""))
@@ -787,20 +808,22 @@ final class OverlayView: NSView {
         }
 
         commitText()
-        var s = Stroke(tool: tool, color: color, width: lineWidth, points: [p, p])
-        if tool == .pen || tool == .highlighter { s.points = [p] }
+        var s = Stroke(tool: drawTool, color: color, width: lineWidth, points: [p, p])
+        if drawTool == .pen || drawTool == .highlighter { s.points = [p] }
         current = s
         needsDisplay = true
     }
 
-    override func mouseDragged(with event: NSEvent) {
+    private func continueStroke(_ event: NSEvent) {
         guard var s = current else { return }
         let p = canvasPoint(event)
         if s.tool == .pen || s.tool == .highlighter {
             s.points.append(p)
         } else {
+            // เริ่มด้วยทางลัด = ยังสลับ ลูกศร ↔ สี่เหลี่ยม กลางคันได้
+            if strokeFromModifier, let t = modifierTool(event.modifierFlags) { s.tool = t }
             var end = p
-            if event.modifierFlags.contains(.shift), let start = s.points.first {
+            if event.modifierFlags.contains(.option), let start = s.points.first {
                 end = constrain(start: start, end: p, tool: s.tool)
             }
             s.points[1] = end
@@ -809,9 +832,10 @@ final class OverlayView: NSView {
         needsDisplay = true
     }
 
-    override func mouseUp(with event: NSEvent) {
+    private func endStroke() {
         guard let s = current else { return }
         current = nil
+        strokeFromModifier = false
         let worthKeeping: Bool
         if s.tool == .pen || s.tool == .highlighter {
             worthKeeping = s.points.count > 1
@@ -863,6 +887,10 @@ final class OverlayView: NSView {
     }
 
     override func rightMouseDown(with event: NSEvent) {
+        if event.modifierFlags.contains(.shift) {
+            beginStroke(event)
+            return
+        }
         controller?.hide()
     }
 

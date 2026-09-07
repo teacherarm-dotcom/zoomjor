@@ -14,7 +14,7 @@ final class OverlayController {
     private var busy = false
 
     // ค่าที่จำไว้ระหว่างการเรียกใช้แต่ละครั้ง
-    var tool: Tool = .arrow
+    var tool: Tool = .pen
     var color: NSColor = Palette.all[0].color
     var lineWidth: CGFloat = 5
 
