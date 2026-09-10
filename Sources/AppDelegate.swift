@@ -5,6 +5,7 @@ import Carbon.HIToolbox
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
+    private var statusMenu: NSMenu?
     let controller = OverlayController()
     let live = LiveZoomController()
 
@@ -34,6 +35,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         ]
 
+        // ทางออกเมื่อแถบเมนูเต็มจนไอคอนไม่ขึ้น — สั่งงานได้โดยไม่ต้องพึ่งไอคอน
+        HotKeyCenter.shared.register(keyCode: kVK_ANSI_M,
+                                     modifiers: controlKey | optionKey) { [weak self] in
+            self?.showMenuAtCursor()
+        }
+        HotKeyCenter.shared.register(keyCode: kVK_ANSI_Q,
+                                     modifiers: controlKey | optionKey) {
+            ZLog.log("ปิดโปรแกรมด้วย ⌃⌥Q")
+            NSApp.terminate(nil)
+        }
+
+        checkStatusItemPlacement()
+
         if ids.contains(where: { $0 == nil }) {
             let alert = NSAlert()
             alert.messageText = "ลงทะเบียนคีย์ลัดไม่สำเร็จบางตัว"
@@ -52,12 +66,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = Self.menuBarIcon()
-            button.image?.isTemplate = true
+            if let icon = Self.menuBarIcon() {
+                button.image = icon
+                button.image?.isTemplate = true
+            } else {
+                // กันเคสไอคอนโหลดไม่ได้ → ปุ่มกว้าง 0 กดไม่โดน หาไม่เจอทั้งที่แอปรันอยู่
+                button.title = "ZJ"
+            }
             button.toolTip = "\(AppInfo.name) — \(AppInfo.tagline)"
         }
 
         let menu = NSMenu()
+        statusMenu = menu
 
         addItem(menu, "ซูมหน้าจอ  (Zoom)          ⌃1", #selector(menuZoom))
         addItem(menu, "วาดบนหน้าจอ  (Draw)      ⌃2", #selector(menuDraw))
@@ -108,7 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
         addItem(menu, "วิธีใช้ / คีย์ลัด…", #selector(menuHelp))
-        let quit = NSMenuItem(title: "ออกจากโปรแกรม", action: #selector(menuQuit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "ออกจากโปรแกรม        ⌃⌥Q", action: #selector(menuQuit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
 
@@ -188,6 +208,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func menuQuit() { NSApp.terminate(nil) }
+
+    /// เปิดเมนูตรงตำแหน่งเมาส์ — ใช้ได้แม้ไอคอนบนแถบเมนูจะถูกซ่อน
+    @objc private func showMenuAtCursor() {
+        guard let menu = statusMenu else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+    }
+
+    /// ตรวจว่าไอคอนได้ที่อยู่จริงบนแถบเมนูไหม (แถบเมนูเต็ม macOS จะตัดทิ้งเงียบ ๆ)
+    private func checkStatusItemPlacement() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self else { return }
+            guard let window = self.statusItem.button?.window else {
+                ZLog.log("statusItem: ไม่มีหน้าต่างปุ่ม → ถือว่าถูกซ่อน")
+                self.warnIconHidden(); return
+            }
+            let f = window.frame
+            var hidden = f.width < 1
+            if let screen = NSScreen.screens.first(where: { $0.frame.intersects(f) }) {
+                // จอที่มีรอยบาก: ไอคอนแถบเมนูต้องอยู่ในพื้นที่ขวาของรอยบาก
+                if let right = screen.auxiliaryTopRightArea, !right.intersects(f) { hidden = true }
+            } else {
+                hidden = true
+            }
+            ZLog.log("statusItem: frame=\(f) visible=\(self.statusItem.isVisible) ซ่อนอยู่=\(hidden)")
+            if hidden { self.warnIconHidden() }
+        }
+    }
+
+    private func warnIconHidden() {
+        let key = "warnedIconHidden"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "ไอคอน \(AppInfo.name) ไม่ขึ้นบนแถบเมนู"
+        alert.informativeText = """
+            แถบเมนูด้านขวาเต็ม macOS จึงตัดไอคอนที่ใส่ทีหลังทิ้ง — แอปยังทำงานปกติ
+
+            สั่งงานได้โดยไม่ต้องใช้ไอคอน:
+              ⌃⌥M   เปิดเมนูตรงตำแหน่งเมาส์
+              ⌃⌥Q   ปิดโปรแกรม
+              ⌃1 – ⌃4  ใช้ 4 โหมดได้ตามปกติ
+
+            ถ้าอยากให้ไอคอนกลับมา: ปิดแอปแถบเมนูที่ไม่ได้ใช้
+            หรือกด ⌘ ค้างแล้วลากไอคอนบนแถบเมนูออกไปสัก 1–2 ตัว
+            """
+        alert.addButton(withTitle: "เข้าใจแล้ว")
+        alert.runModal()
+    }
 
     @objc private func menuHelp() {
         NSApp.activate(ignoringOtherApps: true)
