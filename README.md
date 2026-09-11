@@ -8,14 +8,38 @@
 
 ---
 
-## คอมไพล์ / ติดตั้ง
+## ติดตั้ง
+
+ต้องใช้ **macOS 14 ขึ้นไป** และ Command Line Tools (`xcode-select --install` ครั้งเดียวจบ)
 
 ```bash
+git clone https://github.com/teacherarm-dotcom/zoomjor.git
+cd zoomjor
 ./build.sh
+ditto ZoomJor.app /Applications/ZoomJor.app
+open /Applications/ZoomJor.app
 ```
 
-ได้ `ZoomJor.app` — ลากไปไว้ที่ `/Applications` แล้วดับเบิลคลิกเปิด
-ไอคอนจะไปโผล่บนแถบเมนูด้านขวาบน
+แอปไม่มีหน้าต่างและไม่มีไอคอนใน Dock — ไอคอนจะไปโผล่บนแถบเมนูด้านขวาบน
+ครั้งแรกที่กด `⌃1` macOS จะขอสิทธิ์ **การบันทึกหน้าจอ** ให้อนุญาตแล้วเปิดแอปใหม่
+
+> 💡 ถ้าไอคอนไม่ขึ้นบนแถบเมนู (แถบเมนูฝั่งขวาเต็ม) แอปยังทำงานปกติ —
+> ใช้ `⌃⌥M` เปิดเมนู และ `⌃⌥Q` ปิดโปรแกรม
+
+### ส่งให้เครื่องอื่น
+
+```bash
+ditto -c -k --keepParent /Applications/ZoomJor.app ~/Desktop/ZoomJor.zip
+```
+
+แอปเซ็นแบบ ad-hoc (ยังไม่ notarize) เครื่องปลายทางต้อง **คลิกขวาที่แอป → เปิด** แล้วยืนยันในครั้งแรก
+ถ้ายังโดนบล็อก: `xattr -dr com.apple.quarantine /Applications/ZoomJor.app`
+
+### เทสต์
+
+```bash
+./Tests/run.sh
+```
 
 ### ใส่ไอคอนของตัวเอง
 

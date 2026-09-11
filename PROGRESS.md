@@ -43,6 +43,10 @@ repo: https://github.com/teacherarm-dotcom/zoomjor (public)
   · 🛟 **fallback ตัวอักษร `ZJ`** เมื่อ `menuBarIcon()` คืน nil — เดิมจะได้ปุ่มกว้าง 0 กดไม่โดน หาไม่เจอทั้งที่แอปรันอยู่
   · 📄 คู่มือ `docs/guide.html` เพิ่มหัวข้อ “ถ้าไอคอนไม่ขึ้นบนแถบเมนู” + `⌃⌥Q`/`⌃⌥M` ในตารางคีย์ลัด
 
+- **2026-09-11** — 📦 **เพิ่มวิธีติดตั้งลงคู่มือ + README** (เจ้าของขอ) — 2 เส้นทาง: ① clone → `./build.sh` → `ditto ZoomJor.app /Applications/` (แนะนำ ไม่ติด Gatekeeper) ② บีบส่งด้วย `ditto -c -k --keepParent` แล้วเครื่องปลายทางคลิกขวา→เปิด (เซ็น ad-hoc ยังไม่ notarize) + ทางแก้ `xattr -dr com.apple.quarantine` · เพิ่มขั้นตอนเปิดอัตโนมัติตอนเข้าเครื่อง (รายการเปิดเข้าสู่ระบบ) · README เพิ่มหัวข้อส่งให้เครื่องอื่น + วิธีรันเทสต์
+  · ✅ **verify ของจริง ไม่ได้เขียนลอย ๆ**: clone เปล่าจาก GitHub (`5a768bd`) → `./build.sh` → ได้ `ZoomJor.app` 2.6 MB ลายเซ็น `net.kruarm.zoomjor` flags adhoc → `./Tests/run.sh` 18/18 ผ่าน ⇒ ไฟล์ใน repo ครบพอ build หลัง clone จริง (`Resources/AppIcon.icns` อยู่ใน repo · `.gitignore` ตัดเฉพาะ `ZoomJor.app/`)
+  · เพิ่ม CSS `pre`/`code` ในคู่มือ (เดิมไม่มี) · ตรวจหน้าเรนเดอร์แล้ว โครง HTML ครบ 2 คอลัมน์ไม่ล้น
+
 ## ⚠️ ข้อควรรู้
 
 - เปลี่ยน bundle id เมื่อไหร่ **สิทธิ์ Screen Recording ต้องอนุญาตใหม่** (TCC ผูกกับ bundle id + ลายเซ็น)

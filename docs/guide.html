@@ -288,6 +288,41 @@
 
   /* ---------- notes ---------- */
 
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    padding: .12em .38em;
+  }
+
+  pre {
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+  pre .c { color: var(--faint); }
+
+  .install h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 0 0 4px;
+  }
+
+  .install p.note { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
+
   .notes {
     margin: 0;
     padding: 22px 26px;
@@ -394,11 +429,38 @@
     </div>
   </header>
 
+  <h2>ติดตั้ง</h2>
+  <p class="sub">ต้องใช้ macOS 14 ขึ้นไป · แอปมีขนาด 2.6 MB ไม่ต้องติดตั้งไลบรารีอะไรเพิ่ม</p>
+
+  <div class="grid-2 install">
+    <div>
+      <h3>วิธีที่ 1 — คอมไพล์เอง <em>(แนะนำ)</em></h3>
+      <p class="note">ได้ของใหม่ล่าสุดเสมอ และไม่ติด Gatekeeper ต้องมี Command Line Tools ก่อน (ถ้ายังไม่มี สั่ง <code>xcode-select --install</code> ครั้งเดียวจบ)</p>
+<pre><code>git clone https://github.com/teacherarm-dotcom/zoomjor.git
+cd zoomjor
+./build.sh
+ditto ZoomJor.app /Applications/ZoomJor.app
+open /Applications/ZoomJor.app</code></pre>
+    </div>
+
+    <div>
+      <h3>วิธีที่ 2 — รับไฟล์ที่บีบมาแล้ว</h3>
+      <p class="note">สำหรับเครื่องที่ไม่ได้ลง Command Line Tools — คนส่งสร้างไฟล์ด้วยคำสั่งแรก คนรับแตกไฟล์แล้วลากเข้าโฟลเดอร์แอปพลิเคชัน</p>
+<pre><code><span class="c"># เครื่องต้นทาง: สร้างไฟล์ส่ง</span>
+ditto -c -k --keepParent /Applications/ZoomJor.app ~/Desktop/ZoomJor.zip
+
+<span class="c"># เครื่องปลายทาง: ถ้าเปิดไม่ขึ้นเพราะ Gatekeeper</span>
+xattr -dr com.apple.quarantine /Applications/ZoomJor.app</code></pre>
+      <p class="note">แอปเซ็นแบบ ad-hoc (ยังไม่ผ่าน notarize) เครื่องปลายทางต้อง <b>คลิกขวาที่แอป → เปิด</b> แล้วกดยืนยันในครั้งแรก ดับเบิลคลิกเฉย ๆ จะโดนบล็อก</p>
+    </div>
+  </div>
+
   <h2>เริ่มใช้</h2>
   <ol class="steps">
     <li>เปิดแอป — ไอคอนแว่นขยายจะไปอยู่บนแถบเมนูขวาบน ไม่มีหน้าต่างโปรแกรม</li>
     <li>กด <span class="k">⌃</span> <span class="k">2</span> ลองวาดทับหน้าจอดูก่อน โหมดนี้ใช้ได้ทันที</li>
     <li>กด <span class="k">⌃</span> <span class="k">1</span> เพื่อซูม — ครั้งแรก macOS จะขอสิทธิ์บันทึกหน้าจอ (ดูหมายเหตุท้ายหน้า)</li>
+    <li>อยากให้เปิดเองทุกครั้งที่เข้าเครื่อง: <b>ตั้งค่าระบบ → ทั่วไป → รายการเปิดเข้าสู่ระบบ</b> แล้วกด + เลือก ZoomJor</li>
   </ol>
 
   <h2>สี่โหมดหลัก</h2>
