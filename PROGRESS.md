@@ -47,6 +47,13 @@ repo: https://github.com/teacherarm-dotcom/zoomjor (public)
   · ✅ **verify ของจริง ไม่ได้เขียนลอย ๆ**: clone เปล่าจาก GitHub (`5a768bd`) → `./build.sh` → ได้ `ZoomJor.app` 2.6 MB ลายเซ็น `net.kruarm.zoomjor` flags adhoc → `./Tests/run.sh` 18/18 ผ่าน ⇒ ไฟล์ใน repo ครบพอ build หลัง clone จริง (`Resources/AppIcon.icns` อยู่ใน repo · `.gitignore` ตัดเฉพาะ `ZoomJor.app/`)
   · เพิ่ม CSS `pre`/`code` ในคู่มือ (เดิมไม่มี) · ตรวจหน้าเรนเดอร์แล้ว โครง HTML ครบ 2 คอลัมน์ไม่ล้น
 
+- **2026-09-19** — 📦 **ทำไฟล์ติดตั้ง `.dmg` ลากติดตั้งแบบโปรแกรม Mac ทั่วไป** (เจ้าของแจ้ง "ตอนติดตั้งมันยุ่งยาก") — เดิมต้องใช้ Terminal + ติดตั้ง Command Line Tools ก่อน ซึ่งส่งต่อให้เพื่อนครูไม่ได้จริง
+  · `make-dmg.sh` → `ZoomJor-<version>.dmg` (3.1 MB) ข้างในมี **แอป + symlink `Applications` ให้ลากวาง + `อ่านก่อนติดตั้ง.txt` ภาษาไทย** (ใช้ `hdiutil create -format UDZO -fs HFS+` ไม่ต้องพึ่ง `create-dmg` ที่เครื่องไม่มี) · `*.dmg` เข้า `.gitignore` (แจกผ่าน GitHub Releases)
+  · ✅ **verify**: mount แล้วตรวจครบ — `Applications -> /Applications` เป็น symlink จริง · `codesign --verify --deep --strict` ผ่าน · เวอร์ชัน 1.1 · unmount สะอาด
+  · 🐞 **แก้เอกสารที่เคยเขียนผิด**: วิธี **"คลิกขวา → เปิด" ใช้ไม่ได้บน macOS 15 ขึ้นไป** (เครื่องเจ้าของเป็น 26.5) — Apple ย้ายไปที่ **การตั้งค่าระบบ → ความเป็นส่วนตัวและความปลอดภัย → ปุ่ม "เปิดอยู่ดี"** · แก้ทั้ง README + `docs/guide.html` + ใส่ในไฟล์ในตัว dmg
+  · 🔬 ทดสอบ Gatekeeper จริง: `spctl --assess --type execute` = **rejected ทั้งแบบมีและไม่มี quarantine** (เพราะเซ็น ad-hoc) ⇒ ยืนยันว่าคนที่ **build เองบนเครื่องตัวเอง ไม่ติด quarantine จึงเปิดได้เลย** ส่วนคนที่รับไฟล์มาต้องปลดล็อกครั้งเดียว
+  · 💡 ถ้าอยากให้ "ไม่มีคำเตือนเลย" ต้อง **Apple Developer Program $99/ปี** → เซ็น Developer ID + notarize (`notarytool`) — ยังไม่ทำ รอเจ้าของตัดสินใจ
+
 ## ⚠️ ข้อควรรู้
 
 - เปลี่ยน bundle id เมื่อไหร่ **สิทธิ์ Screen Recording ต้องอนุญาตใหม่** (TCC ผูกกับ bundle id + ลายเซ็น)

@@ -321,6 +321,15 @@
     margin: 0 0 4px;
   }
 
+  ol.mini {
+    margin: 0 0 12px;
+    padding-left: 1.25em;
+    font-size: .93rem;
+    color: var(--ink);
+  }
+
+  ol.mini li { margin-bottom: 5px; }
+
   .install p.note { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
 
   .notes {
@@ -434,25 +443,33 @@
 
   <div class="grid-2 install">
     <div>
-      <h3>วิธีที่ 1 — คอมไพล์เอง <em>(แนะนำ)</em></h3>
-      <p class="note">ได้ของใหม่ล่าสุดเสมอ และไม่ติด Gatekeeper ต้องมี Command Line Tools ก่อน (ถ้ายังไม่มี สั่ง <code>xcode-select --install</code> ครั้งเดียวจบ)</p>
+      <h3>วิธีที่ 1 — ไฟล์ .dmg <em>(ง่ายสุด)</em></h3>
+      <p class="note">ไม่ต้องใช้ Terminal เลย เหมือนติดตั้งโปรแกรม Mac ทั่วไป — เหมาะกับการส่งต่อให้เพื่อนครู</p>
+      <ol class="mini">
+        <li>ดับเบิลคลิกไฟล์ <code>ZoomJor-x.x.dmg</code></li>
+        <li><b>ลากไอคอน ZoomJor ไปวางบนโฟลเดอร์ Applications</b> ที่อยู่ข้าง ๆ</li>
+        <li>เปิดโฟลเดอร์ แอปพลิเคชัน แล้วดับเบิลคลิก ZoomJor</li>
+      </ol>
+      <p class="note">ครั้งแรกจะโดนบล็อก ดูขั้นตอนปลดล็อกในกล่องข้างล่าง</p>
+    </div>
+
+    <div>
+      <h3>วิธีที่ 2 — คอมไพล์เอง</h3>
+      <p class="note">ได้ของใหม่ล่าสุด และ<b>ไม่ต้องปลดล็อก Gatekeeper เลย</b> ต้องมี Command Line Tools ก่อน (ถ้ายังไม่มี สั่ง <code>xcode-select --install</code> ครั้งเดียวจบ)</p>
 <pre><code>git clone https://github.com/teacherarm-dotcom/zoomjor.git
 cd zoomjor
 ./build.sh
 ditto ZoomJor.app /Applications/ZoomJor.app
 open /Applications/ZoomJor.app</code></pre>
     </div>
+  </div>
 
-    <div>
-      <h3>วิธีที่ 2 — รับไฟล์ที่บีบมาแล้ว</h3>
-      <p class="note">สำหรับเครื่องที่ไม่ได้ลง Command Line Tools — คนส่งสร้างไฟล์ด้วยคำสั่งแรก คนรับแตกไฟล์แล้วลากเข้าโฟลเดอร์แอปพลิเคชัน</p>
-<pre><code><span class="c"># เครื่องต้นทาง: สร้างไฟล์ส่ง</span>
-ditto -c -k --keepParent /Applications/ZoomJor.app ~/Desktop/ZoomJor.zip
-
-<span class="c"># เครื่องปลายทาง: ถ้าเปิดไม่ขึ้นเพราะ Gatekeeper</span>
-xattr -dr com.apple.quarantine /Applications/ZoomJor.app</code></pre>
-      <p class="note">แอปเซ็นแบบ ad-hoc (ยังไม่ผ่าน notarize) เครื่องปลายทางต้อง <b>คลิกขวาที่แอป → เปิด</b> แล้วกดยืนยันในครั้งแรก ดับเบิลคลิกเฉย ๆ จะโดนบล็อก</p>
-    </div>
+  <div class="callout" style="margin-top:22px">
+    <strong>⚠️ ปลดล็อกครั้งแรก (เฉพาะวิธีที่ 1)</strong><br>
+    เปิดครั้งแรกจะขึ้นว่า <em>“Apple ตรวจสอบหามัลแวร์ไม่ได้”</em> — ปกติ เพราะแอปแจกฟรีและยังไม่ได้ซื้อใบรับรองนักพัฒนาของ Apple<br>
+    กด <b>เสร็จสิ้น</b> → ไปที่ <b>การตั้งค่าระบบ → ความเป็นส่วนตัวและความปลอดภัย</b> →
+    เลื่อนลงจะเห็นบรรทัด <em>“ZoomJor” ถูกบล็อก…</em> → กด <b>เปิดอยู่ดี</b> → ยืนยัน · <b>ทำครั้งเดียวจบ</b><br>
+    <em style="color:var(--muted)">macOS 15 ขึ้นไปย้ายขั้นตอนนี้มาที่การตั้งค่าระบบแล้ว วิธีคลิกขวา → เปิด แบบเดิมใช้ไม่ได้</em>
   </div>
 
   <h2>เริ่มใช้</h2>

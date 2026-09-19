@@ -4,3 +4,6 @@ build/
 
 # macOS
 .DS_Store
+
+# ไฟล์ติดตั้ง (สร้างใหม่ได้ด้วย ./make-dmg.sh · แจกผ่าน GitHub Releases)
+*.dmg
