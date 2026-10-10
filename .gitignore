@@ -7,3 +7,8 @@ build/
 
 # ไฟล์ติดตั้ง (สร้างใหม่ได้ด้วย ./make-dmg.sh · แจกผ่าน GitHub Releases)
 *.dmg
+
+# วิดีโอสอนการใช้งาน — เก็บเฉพาะตัวสร้าง (video/tool, video/assets, build-video.sh)
+# ภาพหน้าจอจริงมีข้อมูลส่วนตัว (ชื่อบัญชี Apple / รายชื่อแอป) ห้ามขึ้น repo สาธารณะ
+video/build/
+video/captures/

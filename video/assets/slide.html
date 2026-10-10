@@ -1,0 +1,68 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1512px;height:982px;font-family:Sarabun,sans-serif;background:#f7f8fb;color:#1b2333;padding:54px 70px;position:relative;overflow:hidden}
+.hd{display:flex;align-items:baseline;gap:18px;border-bottom:3px solid #1b2333;padding-bottom:14px}
+.hd .u{font-size:22px;font-weight:600;color:#5a6478}
+.hd h1{font-size:44px;font-weight:700}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:44px;margin-top:34px}
+.card{background:#fff;border:1px solid #dde1ea;border-radius:14px;padding:26px}
+.card h2{font-size:24px;margin-bottom:14px}
+svg text{font-family:Sarabun;font-size:15px;fill:#1b2333}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{border-bottom:1px solid #e4e7ef;padding:7px 8px;text-align:left}
+th{color:#5a6478;font-weight:600}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid #0002}
+.steps{font-size:18px;line-height:1.75;padding-left:22px;margin-top:6px}
+.warn{margin-top:22px;background:#fff6e5;border:1px solid #f1c46a;border-radius:12px;padding:14px 18px;font-size:16px}
+.small{font-size:12.5px;color:#6b7386;margin-top:10px}
+.foot{position:absolute;left:70px;right:70px;bottom:34px;display:flex;justify-content:space-between;font-size:15px;color:#7a8296}
+</style></head><body>
+<div class="hd"><span class="u">หน่วยที่ 3</span><h1>การต่อวงจรไฟฟ้าแบบอนุกรม</h1></div>
+<div class="grid">
+ <div>
+  <div class="card">
+   <h2>วงจรทดลอง</h2>
+   <svg width="560" height="250" viewBox="0 0 560 250">
+    <rect x="40" y="40" width="480" height="170" fill="none" stroke="#1b2333" stroke-width="3"/>
+    <rect x="22" y="95" width="36" height="60" fill="#fff" stroke="#1b2333" stroke-width="3"/>
+    <text x="70" y="120">แบตเตอรี่ 9 V</text><text x="70" y="140" style="font-size:12px;fill:#6b7386">(+ ด้านบน)</text>
+    <rect x="150" y="27" width="70" height="26" fill="#f4e3c8" stroke="#1b2333" stroke-width="2.5"/>
+    <rect x="160" y="27" width="6" height="26" fill="#d9282f"/><rect x="172" y="27" width="6" height="26" fill="#d9282f"/><rect x="184" y="27" width="6" height="26" fill="#6b3b1d"/><rect x="204" y="27" width="5" height="26" fill="#c9a227"/>
+    <text x="150" y="20">R1 = 220 Ω</text>
+    <rect x="310" y="27" width="70" height="26" fill="#f4e3c8" stroke="#1b2333" stroke-width="2.5"/>
+    <rect x="320" y="27" width="6" height="26" fill="#6b3b1d"/><rect x="332" y="27" width="6" height="26" fill="#111"/><rect x="344" y="27" width="6" height="26" fill="#d9282f"/><rect x="364" y="27" width="5" height="26" fill="#c9a227"/>
+    <text x="310" y="20">R2 = 1 kΩ</text>
+    <circle cx="520" cy="125" r="26" fill="#fff8d6" stroke="#1b2333" stroke-width="3"/><path d="M502 107 L538 143 M538 107 L502 143" stroke="#1b2333" stroke-width="2"/>
+    <text x="440" y="185">หลอด LED</text>
+    <circle cx="280" cy="210" r="18" fill="#fff" stroke="#1b2333" stroke-width="3"/><text x="272" y="216" style="font-size:17px;font-weight:700">A</text>
+    <text x="305" y="238" style="font-size:13px;fill:#6b7386">แอมมิเตอร์ (ต่ออนุกรม)</text>
+   </svg>
+   <p class="small">กระแสในวงจรอนุกรมเท่ากันทุกจุด · ความต้านทานรวม R = R1 + R2 = 1,220 Ω · I = V / R ≈ 7.4 mA</p>
+  </div>
+  <div class="warn">⚠️ ข้อควรระวัง: ตรวจขั้วแบตเตอรี่และขา LED (ขายาว = ขั้วบวก) ก่อนจ่ายไฟทุกครั้ง</div>
+ </div>
+ <div>
+  <div class="card">
+   <h2>รหัสสีตัวต้านทาน</h2>
+   <table>
+    <tr><th>สี</th><th>ค่า</th><th>ตัวคูณ</th></tr>
+    <tr><td><span class="sw" style="background:#111"></span>ดำ</td><td>0</td><td>×1</td></tr>
+    <tr><td><span class="sw" style="background:#6b3b1d"></span>น้ำตาล</td><td>1</td><td>×10</td></tr>
+    <tr><td><span class="sw" style="background:#d9282f"></span>แดง</td><td>2</td><td>×100</td></tr>
+    <tr><td><span class="sw" style="background:#f08a24"></span>ส้ม</td><td>3</td><td>×1k</td></tr>
+    <tr><td><span class="sw" style="background:#f2d21b"></span>เหลือง</td><td>4</td><td>×10k</td></tr>
+    <tr><td><span class="sw" style="background:#2c9a45"></span>เขียว</td><td>5</td><td>×100k</td></tr>
+    <tr><td><span class="sw" style="background:#2f6fd6"></span>น้ำเงิน</td><td>6</td><td>×1M</td></tr>
+   </table>
+   <p class="small">แถบทอง = ค่าคลาดเคลื่อน ±5% · แถบเงิน = ±10%</p>
+  </div>
+  <div class="card" style="margin-top:22px">
+   <h2>ขั้นตอนการทดลอง</h2>
+   <ol class="steps"><li>ต่อ R1 และ R2 เรียงกันแบบอนุกรม</li><li>ต่อแอมมิเตอร์คั่นในวงจร</li><li>จ่ายไฟ 9 V แล้วอ่านค่ากระแส</li><li>บันทึกผลลงในใบงาน</li></ol>
+  </div>
+ </div>
+</div>
+<div class="foot"><span>วิชางานไฟฟ้าเบื้องต้น</span><span>ใบความรู้ที่ 3.1</span></div>
+</body></html>

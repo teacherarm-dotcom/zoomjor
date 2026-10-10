@@ -56,6 +56,17 @@ open /Applications/ZoomJor.app
 
 ได้ `ZoomJor-x.x.dmg` พร้อมแจก (ข้างในมีแอป + ทางลัด Applications + ไฟล์วิธีติดตั้งภาษาไทย)
 
+### วิดีโอสอนการใช้งาน
+
+```bash
+./video/build-video.sh            # → video/build/ZoomJor-สอนการใช้งาน.mp4 (1920x1080 · พากย์ไทย)
+./video/build-video.sh --preview  # → ภาพตัวอย่างทุกฉากใน video/build/preview/
+```
+
+- ฉาก ZoomJor ทุกโหมดวาดด้วย **โค้ดจริงของแอป** (`OverlayView` / `LiveZoomView`) — แก้หน้าตาแอปแล้วสั่งสร้างใหม่ วิดีโอตามทันที
+- ฉากติดตั้ง/การตั้งค่าระบบใช้ภาพหน้าจอจริงใน `video/captures/` (ไม่อยู่ใน repo เพราะมีข้อมูลส่วนตัว)
+- เสียงพากย์ = `say -v Kanya` · สคริปต์ทั้งหมดอยู่ใน `video/tool/main.swift` · ไม่ต้องติดตั้ง ffmpeg (ใช้ AVFoundation)
+
 ### เทสต์
 
 ```bash
