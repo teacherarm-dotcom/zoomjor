@@ -119,6 +119,40 @@ func run() {
     check("กล่องข้อความว่างถูกยกเลิกทิ้ง ไม่ค้างในภาพ",
           !v.strokes.contains { $0.tool == .text && $0.text.isEmpty })
 
+    print("\n— เมาส์ใหญ่ (⌃5) —")
+    for sc in CursorFX.scaleChoices {
+        let bb = CursorFX.arrowPath(scale: sc).boundingBox
+        check("ลูกศร \(Int(sc))× ปลายอยู่ที่จุดเมาส์พอดี (มุมซ้ายบน = 0,0)",
+              abs(bb.minX) < 0.001 && abs(bb.maxY) < 0.001, "\(bb)")
+        check("ลูกศร \(Int(sc))× ใหญ่เป็น \(Int(sc)) เท่าของเคอร์เซอร์ปกติ",
+              abs(bb.width - 12 * sc) < 0.01 && abs(bb.height - 18.5 * sc) < 0.01, "\(bb.size)")
+        check("วงคลิก \(Int(sc))× ใหญ่กว่าวงแสง (มองเห็นพ้นวงแสง)",
+              CursorFX.rippleRadius(scale: sc) > CursorFX.haloRadius(scale: sc))
+    }
+    check("ค่าขนาดขยะ/ยังไม่เคยตั้ง → 3×", CursorFX.clampScale(0) == 3 && CursorFX.clampScale(7.5) == 3)
+    check("ค่าขนาดที่ถูกต้องคงเดิม", CursorFX.clampScale(2) == 2 && CursorFX.clampScale(4) == 4)
+    let second = CGRect(x: -1440, y: 120, width: 1440, height: 900)  // จอที่ 2 อยู่ซ้ายของจอหลัก
+    check("แปลงพิกัดจอที่ 2 (พิกัดติดลบ) ถูกต้อง",
+          CursorFX.local(CGPoint(x: -1000, y: 500), in: second) == CGPoint(x: 440, y: 380))
+    check("สีคลิกซ้าย/ขวา/กลาง ต่างกัน",
+          Set([CursorFX.ClickKind.left, .right, .other].map { $0.color.description }).count == 3)
+
+    // วาดจริงลงภาพ: จุดที่ปลายลูกศรต้องเป็นของลูกศร ส่วนพื้นที่ห่างออกไปต้องโปร่ง
+    let fxv = CursorFXView(frame: NSRect(x: 0, y: 0, width: 300, height: 300))
+    fxv.screenFrame = CGRect(x: 0, y: 0, width: 300, height: 300)
+    fxv.configure(scale: 3, halo: false)
+    fxv.showCursor(at: CGPoint(x: 100, y: 200))
+    let rep = fxv.bitmapImageRepForCachingDisplay(in: fxv.bounds)!
+    fxv.layer!.render(in: NSGraphicsContext(bitmapImageRep: rep)!.cgContext)
+    // bitmap แกน y ลงล่าง: จุด (x,y) ของวิว = แถว 300-y
+    func alpha(_ x: Int, _ y: Int) -> CGFloat {
+        rep.colorAt(x: x * rep.pixelsWide / 300, y: (300 - y) * rep.pixelsHigh / 300)?.alphaComponent ?? 0
+    }
+    check("วาดลูกศรใต้ปลายเมาส์จริง", alpha(106, 180) > 0.9, "alpha=\(alpha(106, 180))")
+    check("นอกตัวลูกศรโปร่งใส (คลิกทะลุ/มองทะลุได้)", alpha(200, 100) < 0.01)
+    fxv.showCursor(at: nil)
+    check("ซ่อนได้เมื่อเมาส์อยู่จออื่น", fxv.layer!.sublayers!.allSatisfy { $0.isHidden })
+
     print("\n=========== ผ่าน \(pass) / ตก \(fail) ===========")
     exit(fail == 0 ? 0 : 1)
 }

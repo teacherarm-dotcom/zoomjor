@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusMenu: NSMenu?
     let controller = OverlayController()
     let live = LiveZoomController()
+    let cursor = CursorFX()
 
     private let timerChoices: [Double] = [1, 3, 5, 10, 15, 20, 30, 45, 60]
 
@@ -17,6 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         live.onFailure = { [weak self] error in
             self?.controller.showPermissionAlert(error)
         }
+
+        // ตอนวาด/ซูมแช่/นาฬิกา โหมดนั้นมีเคอร์เซอร์ของตัวเอง → พักเมาส์ใหญ่ไว้ก่อน
+        cursor.isSuppressed = { [weak self] in self?.controller.isActive ?? false }
+        cursor.restoreIfNeeded()
 
         ZLog.log("=== ZoomJor เริ่มทำงาน ===")
         HotKeyCenter.shared.start()
@@ -32,6 +37,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             },
             HotKeyCenter.shared.register(keyCode: kVK_ANSI_4, modifiers: controlKey) { [weak self] in
                 self?.controller.hide(); self?.live.toggle()
+            },
+            HotKeyCenter.shared.register(keyCode: kVK_ANSI_5, modifiers: controlKey) { [weak self] in
+                self?.toggleCursorFX()
             }
         ]
 
@@ -51,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ids.contains(where: { $0 == nil }) {
             let alert = NSAlert()
             alert.messageText = "ลงทะเบียนคีย์ลัดไม่สำเร็จบางตัว"
-            alert.informativeText = "อาจมีแอปอื่นใช้ ⌃1 – ⌃4 อยู่ — ยังสั่งงานผ่านไอคอนบนแถบเมนูได้ตามปกติ"
+            alert.informativeText = "อาจมีแอปอื่นใช้ ⌃1 – ⌃5 อยู่ — ยังสั่งงานผ่านไอคอนบนแถบเมนูได้ตามปกติ"
             alert.runModal()
         }
     }
@@ -59,6 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         live.stop()
         controller.hide()
+        cursor.hideWindows()
     }
 
     // MARK: - แถบเมนู
@@ -83,6 +92,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         addItem(menu, "วาดบนหน้าจอ  (Draw)      ⌃2", #selector(menuDraw))
         addItem(menu, "จับเวลาถอยหลัง  (Timer)   ⌃3", #selector(menuTimer))
         addItem(menu, "ซูมสด  (Live zoom)          ⌃4", #selector(menuLiveZoom))
+        addItem(menu, "เมาส์ใหญ่ + เอฟเฟกต์คลิก   ⌃5", #selector(menuCursorFX))
+
+        // ตั้งค่าเมาส์ใหญ่
+        let cursorItem = NSMenuItem(title: "ตั้งค่าเมาส์", action: nil, keyEquivalent: "")
+        let cursorMenu = NSMenu()
+        for (i, s) in CursorFX.scaleChoices.enumerated() {
+            let item = NSMenuItem(title: "ขนาดเมาส์ \(Int(s))×",
+                                  action: #selector(menuPickCursorScale(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = i
+            cursorMenu.addItem(item)
+        }
+        cursorMenu.addItem(.separator())
+        let haloItem = NSMenuItem(title: "วงแสงเหลืองรอบเมาส์", action: #selector(menuToggleHalo), keyEquivalent: "")
+        haloItem.target = self
+        cursorMenu.addItem(haloItem)
+        let clickItem = NSMenuItem(title: "เอฟเฟกต์ตอนคลิก", action: #selector(menuToggleClicks), keyEquivalent: "")
+        clickItem.target = self
+        cursorMenu.addItem(clickItem)
+        cursorItem.submenu = cursorMenu
+        menu.addItem(cursorItem)
 
         menu.addItem(.separator())
 
@@ -183,6 +213,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.item(withTitle: "เวลาพักเริ่มต้น")?.submenu?.items.forEach {
             $0.state = (timerChoices[$0.tag] == controller.defaultTimerMinutes) ? .on : .off
         }
+        menu.item(withTitle: "เมาส์ใหญ่ + เอฟเฟกต์คลิก   ⌃5")?.state = cursor.isEnabled ? .on : .off
+        if let cm = menu.item(withTitle: "ตั้งค่าเมาส์")?.submenu {
+            for item in cm.items where item.action == #selector(menuPickCursorScale(_:)) {
+                item.state = CursorFX.scaleChoices[item.tag] == cursor.scale ? .on : .off
+            }
+            cm.item(withTitle: "วงแสงเหลืองรอบเมาส์")?.state = cursor.showsHalo ? .on : .off
+            cm.item(withTitle: "เอฟเฟกต์ตอนคลิก")?.state = cursor.showsClicks ? .on : .off
+        }
     }
 
     // MARK: - Actions
@@ -191,6 +229,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func menuDraw()  { live.stop(); controller.startDraw() }
     @objc private func menuTimer() { live.stop(); controller.startTimer() }
     @objc private func menuLiveZoom() { controller.hide(); live.toggle() }
+    @objc private func menuCursorFX() { toggleCursorFX() }
+
+    private func toggleCursorFX() {
+        cursor.toggle()
+        refreshMenuState()
+    }
+
+    /// เลือกขนาด/วงแสง/เอฟเฟกต์ = เปิดใช้ให้ด้วยเลย (เลือกแล้วไม่เห็นอะไรเปลี่ยน ผู้ใช้จะงง)
+    @objc private func menuPickCursorScale(_ sender: NSMenuItem) {
+        cursor.scale = CursorFX.scaleChoices[sender.tag]
+        if !cursor.isEnabled { cursor.start() }
+        refreshMenuState()
+    }
+
+    @objc private func menuToggleHalo() {
+        cursor.showsHalo.toggle()
+        if !cursor.isEnabled { cursor.start() }
+        refreshMenuState()
+    }
+
+    @objc private func menuToggleClicks() {
+        cursor.showsClicks.toggle()
+        if !cursor.isEnabled { cursor.start() }
+        refreshMenuState()
+    }
 
     @objc private func menuPickDuration(_ sender: NSMenuItem) {
         controller.defaultTimerMinutes = timerChoices[sender.tag]
@@ -268,6 +331,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ▸ เรียกใช้งาน (กดที่ไหนก็ได้)
           ⌃1  แช่หน้าจอ + ซูม          ⌃2  วาดทับหน้าจอสด
           ⌃3  นาฬิกาจับเวลาถอยหลัง   ⌃4  ซูมสด (Live zoom)
+          ⌃5  เมาส์ใหญ่ + เอฟเฟกต์คลิก (เปิด/ปิด)
 
         ▸ คีย์ลัดทุกตัวอ่านจาก "ตำแหน่งปุ่ม" ไม่ใช่ตัวอักษร
           สลับแป้นพิมพ์เป็นภาษาไทยค้างอยู่ก็กดได้ตามปกติ ไม่ต้องสลับกลับเป็นอังกฤษ
@@ -307,6 +371,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
           ขยายภาพจริงแบบเรียลไทม์ คลิก/พิมพ์ทะลุไปยังแอปข้างล่างได้ตามปกติ
           ⌃⌥↑ / ⌃⌥=  ขยาย          ⌃⌥↓ / ⌃⌥-  ย่อ
           ⌃⌥0  กลับ 200%            ⌃4 หรือปุ่ม ✕ บนแถบลอย = ปิด
+
+        ▸ เมาส์ใหญ่ + เอฟเฟกต์คลิก (⌃5)
+          เมาส์ตัวใหญ่มีวงแสงเหลืองล้อม ใช้ได้ทุกแอป — คลิกซ้าย = วงแดง  คลิกขวา = วงน้ำเงิน
+          เมนู "ตั้งค่าเมาส์" = ขนาด 2× 3× 4× · เปิด/ปิดวงแสง · เปิด/ปิดเอฟเฟกต์คลิก
+          ติดไปในโปรแกรมอัดจอ/แชร์จอด้วย ผู้ชมเห็นว่าคลิกตรงไหน (จำค่าไว้ เปิดโปรแกรมครั้งหน้ายังเปิดอยู่)
 
         ▸ อื่น ๆ
           [ ]  ปรับขนาดเส้น        ⌘S เซฟ PNG ลง Desktop    ⌘C คัดลอกลงคลิปบอร์ด
